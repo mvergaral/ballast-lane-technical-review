@@ -1,0 +1,28 @@
+{
+  "name": "ballast-lane-technical-review",
+  "version": "1.0.0",
+  "description": "Full-stack application with Rails API backend and React frontend",
+  "scripts": {
+    "dev": "./dev.sh",
+    "dev:rails": "cd . && rails server -p 3000",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "test": "cd . && rails test",
+    "setup": "bundle install && cd frontend && npm install",
+    "db:setup": "rails db:create && rails db:migrate",
+    "db:reset": "rails db:drop && rails db:create && rails db:migrate"
+  },
+  "keywords": [
+    "rails",
+    "react",
+    "api",
+    "fullstack",
+    "tailwind"
+  ],
+  "author": "Ballast Lane Technical Review",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0",
+    "ruby": "3.4.1"
+  }
+} 

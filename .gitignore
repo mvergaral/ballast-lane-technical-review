@@ -1,0 +1,104 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# Rails
+*.rbc
+capybara-*.html
+.rspec
+/db/*.sqlite3
+/db/*.sqlite3-journal
+/db/*.sqlite3-[0-9]*
+/public/system
+/coverage/
+/spec/tmp
+*.orig
+rerun.txt
+pickle-email-*.html
+
+# Ignore all logfiles and tempfiles.
+/log/*
+/tmp/*
+!/log/.keep
+!/tmp/.keep
+
+# Ignore pidfiles, but keep the directory.
+/tmp/pids/*
+!/tmp/pids/
+!/tmp/pids/.keep
+
+# Ignore uploaded files in development.
+/storage/*
+!/storage/.keep
+/tmp/storage/*
+!/tmp/storage/
+!/tmp/storage/.keep
+
+# Ignore master key for decrypting credentials and more.
+/config/master.key
+/config/credentials/*.key
+
+# Ignore application configuration.
+/config/application.yml
+
+# Ignore environment variables.
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Ignore database files.
+*.db
+*.sqlite3
+
+# Ignore cache files.
+.cache/
+.sass-cache/
+
+# Ignore bundle files.
+/vendor/bundle/
+
+# Ignore node modules for frontend.
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Ignore OS generated files.
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Ignore IDE files.
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Ignore Kamal deployment files.
+.kamal/
+
+# Ignore test coverage.
+coverage/
+
+# Ignore yarn files.
+yarn-error.log
+.yarn-integrity
+
+# Ignore npm files.
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Ignore build artifacts.
+/build/
+/dist/
+
+# Ignore environment files.
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local 

@@ -31,9 +31,38 @@ const BookModal = ({ book = null, onClose, onSaved }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target
+    
+    let processedValue = value
+    
+    // Format ISBN as user types
+    if (name === 'isbn') {
+      // Remove all non-digit characters
+      const digitsOnly = value.replace(/\D/g, '')
+      // Format as 978-1-234-56789-0 style
+      if (digitsOnly.length > 0) {
+        let formatted = digitsOnly
+        if (digitsOnly.length > 3) {
+          formatted = digitsOnly.slice(0, 3) + '-' + digitsOnly.slice(3)
+        }
+        if (digitsOnly.length > 4) {
+          const parts = formatted.split('-')
+          formatted = parts[0] + '-' + parts[1].slice(0, 1) + '-' + parts[1].slice(1)
+        }
+        if (digitsOnly.length > 7) {
+          const parts = formatted.split('-')
+          formatted = parts[0] + '-' + parts[1] + '-' + parts[2].slice(0, 3) + '-' + parts[2].slice(3)
+        }
+        if (digitsOnly.length > 12) {
+          const parts = formatted.split('-')
+          formatted = parts[0] + '-' + parts[1] + '-' + parts[2] + '-' + parts[3].slice(0, 5) + '-' + parts[3].slice(5)
+        }
+        processedValue = formatted
+      }
+    }
+    
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'total_copies' ? parseInt(value) || 0 : value
+      [name]: name === 'total_copies' ? parseInt(value) || 0 : processedValue
     }))
     
     // Clear error for this field
@@ -59,6 +88,14 @@ const BookModal = ({ book = null, onClose, onSaved }) => {
     
     if (!formData.isbn.trim()) {
       newErrors.isbn = 'ISBN is required'
+    } else {
+      // Remove any hyphens or spaces from ISBN for validation
+      const cleanISBN = formData.isbn.replace(/[-\s]/g, '')
+      if (cleanISBN.length !== 13) {
+        newErrors.isbn = 'ISBN must be exactly 13 digits'
+      } else if (!/^\d{13}$/.test(cleanISBN)) {
+        newErrors.isbn = 'ISBN must contain only digits'
+      }
     }
     
     if (formData.total_copies < 1) {
@@ -170,13 +207,16 @@ const BookModal = ({ book = null, onClose, onSaved }) => {
                 />
 
                 <Input
-                  label="ISBN"
+                  label="ISBN (13 digits)"
                   name="isbn"
                   value={formData.isbn}
                   onChange={handleChange}
                   error={errors.isbn}
                   required
-                  placeholder="Enter ISBN"
+                  placeholder="e.g. 9781234567890"
+                  maxLength="17"
+                  pattern="[\d\-\s]{10,17}"
+                  title="Enter a 13-digit ISBN. Hyphens and spaces are allowed."
                 />
 
                 <Input

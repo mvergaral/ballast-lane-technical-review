@@ -7,7 +7,8 @@ class Book < ApplicationRecord
   validates :title, presence: true, length: { minimum: 1, maximum: 255 }
   validates :author, presence: true, length: { minimum: 1, maximum: 255 }
   validates :genre, presence: true, length: { minimum: 1, maximum: 100 }
-  validates :isbn, presence: true, uniqueness: true, length: { is: 13 }
+  validates :isbn, presence: true, uniqueness: true
+  validate :isbn_format
   validates :total_copies, presence: true, numericality: { greater_than: 0 }
   validates :available_copies, presence: true, numericality: { greater_than_or_equal_to: 0 }
   validate :available_copies_cannot_exceed_total_copies
@@ -68,6 +69,7 @@ class Book < ApplicationRecord
   }
 
   # Callbacks
+  before_validation :normalize_isbn
   before_validation :set_available_copies, on: :create, if: :new_record?
   before_save :update_search_vector
 
@@ -147,6 +149,22 @@ class Book < ApplicationRecord
       self.search_vector = result.first["search_vector"]
     rescue => e
       Rails.logger.warn "Failed to update search_vector: #{e.message}"
+    end
+  end
+
+  def normalize_isbn
+    return if isbn.blank?
+
+    # Remove hyphens, spaces, and any other non-digit characters
+    self.isbn = isbn.gsub(/\D/, "")
+  end
+
+  def isbn_format
+    return if isbn.blank?
+
+    # After normalization, check if it's exactly 13 digits
+    unless isbn.match?(/^\d{13}$/)
+      errors.add(:isbn, "must be exactly 13 digits")
     end
   end
 end

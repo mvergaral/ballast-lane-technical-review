@@ -30,7 +30,7 @@ RSpec.describe "Api::Books", type: :request do
       it "validates ISBN format" do
         book = build(:book, isbn: '123')
         expect(book).not_to be_valid
-        expect(book.errors[:isbn]).to include("is the wrong length (should be 13 characters)")
+        expect(book.errors[:isbn]).to include("must be exactly 13 digits")
       end
 
       it "validates total copies is positive" do
@@ -119,7 +119,7 @@ RSpec.describe "Api::Books", type: :request do
       it "filters available books" do
         available_books = Book.available
         expect(available_books).to include(book1, book2, book3)
-        
+
         unavailable_book = create(:book, total_copies: 3, available_copies: 0)
         expect(Book.available).not_to include(unavailable_book)
       end
@@ -147,7 +147,7 @@ RSpec.describe "Api::Books", type: :request do
       it "updates search vector on save" do
         book = create(:book, title: 'Original Title')
         original_vector = book.search_vector
-        
+
         book.update!(title: 'Updated Title')
         expect(book.search_vector).not_to eq(original_vector)
         expect(book.search_vector).to include('updat')

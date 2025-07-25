@@ -15,7 +15,35 @@ RSpec.describe Book, type: :model do
     it { should validate_length_of(:title).is_at_least(1).is_at_most(255) }
     it { should validate_length_of(:author).is_at_least(1).is_at_most(255) }
     it { should validate_length_of(:genre).is_at_least(1).is_at_most(100) }
-    it { should validate_length_of(:isbn).is_equal_to(13) }
+
+    describe 'ISBN validation' do
+      it 'accepts 13-digit ISBN without formatting' do
+        book = build(:book, isbn: '1234567890123')
+        expect(book).to be_valid
+      end
+
+      it 'accepts 13-digit ISBN with hyphens' do
+        book = build(:book, isbn: '123-4-567-89012-3')
+        expect(book).to be_valid
+      end
+
+      it 'normalizes ISBN by removing non-digits' do
+        book = create(:book, isbn: '123-4-567-89012-3')
+        expect(book.isbn).to eq('1234567890123')
+      end
+
+      it 'rejects ISBN with wrong length' do
+        book = build(:book, isbn: '123456789012')  # 12 digits
+        expect(book).not_to be_valid
+        expect(book.errors[:isbn]).to include('must be exactly 13 digits')
+      end
+
+      it 'rejects ISBN with non-digit characters (except hyphens/spaces)' do
+        book = build(:book, isbn: '123456789012a')
+        expect(book).not_to be_valid
+        expect(book.errors[:isbn]).to include('must be exactly 13 digits')
+      end
+    end
     it { should validate_numericality_of(:total_copies).is_greater_than(0) }
     it { should validate_numericality_of(:available_copies).is_greater_than_or_equal_to(0) }
   end
@@ -234,6 +262,12 @@ RSpec.describe Book, type: :model do
 
   describe 'callbacks' do
     describe 'before_validation' do
+      it 'normalizes ISBN by removing non-digits' do
+        book = build(:book, isbn: '123-4-567-89012-3')
+        book.valid?
+        expect(book.isbn).to eq('1234567890123')
+      end
+
       it 'sets available_copies to total_copies on create' do
         book = Book.create!(
           title: 'New Book',
@@ -263,7 +297,7 @@ RSpec.describe Book, type: :model do
       it 'updates search_vector when title changes' do
         book = create(:book, title: 'Original Title')
         original_vector = book.search_vector
-        
+
         book.update!(title: 'Updated Title')
         expect(book.search_vector).not_to eq(original_vector)
       end
@@ -271,7 +305,7 @@ RSpec.describe Book, type: :model do
       it 'updates search_vector when author changes' do
         book = create(:book, author: 'Original Author')
         original_vector = book.search_vector
-        
+
         book.update!(author: 'Updated Author')
         expect(book.search_vector).not_to eq(original_vector)
       end
@@ -279,7 +313,7 @@ RSpec.describe Book, type: :model do
       it 'updates search_vector when genre changes' do
         book = create(:book, genre: 'Original Genre')
         original_vector = book.search_vector
-        
+
         book.update!(genre: 'Updated Genre')
         expect(book.search_vector).not_to eq(original_vector)
       end
@@ -287,7 +321,7 @@ RSpec.describe Book, type: :model do
       it 'updates search_vector when isbn changes' do
         book = create(:book)
         original_vector = book.search_vector
-        
+
         new_isbn = sprintf("%013d", (Time.current.to_i % 10000000000000) + 999)
         book.update!(isbn: new_isbn)
         expect(book.search_vector).not_to eq(original_vector)
@@ -296,7 +330,7 @@ RSpec.describe Book, type: :model do
       it 'does not update search_vector when other fields change' do
         book = create(:book, total_copies: 5)
         original_vector = book.search_vector
-        
+
         book.update!(total_copies: 10)
         expect(book.search_vector).to eq(original_vector)
       end
@@ -304,17 +338,17 @@ RSpec.describe Book, type: :model do
       it 'creates search_vector when nil' do
         book = create(:book)
         book.update_column(:search_vector, nil)
-        
+
         book.update!(title: book.title) # Force update
         expect(book.search_vector).not_to be_nil
       end
 
       it 'handles SQL execution errors gracefully' do
         book = create(:book)
-        
+
         # Mock ActiveRecord::Base.connection to raise an error
         allow(ActiveRecord::Base.connection).to receive(:execute).and_raise(StandardError.new('SQL Error'))
-        
+
         # Should not raise error, just log warning
         expect { book.update!(title: 'New Title') }.not_to raise_error
       end
@@ -348,7 +382,7 @@ RSpec.describe Book, type: :model do
       it 'updates search_vector when relevant fields change' do
         book.title = 'New Title'
         expect(book).to receive(:title_changed?).and_return(true)
-        
+
         book.send(:update_search_vector)
         expect(book.search_vector).to include('new', 'titl')
       end
@@ -359,7 +393,7 @@ RSpec.describe Book, type: :model do
         allow(book).to receive(:genre_changed?).and_return(false)
         allow(book).to receive(:isbn_changed?).and_return(false)
         book.search_vector = 'existing_vector'
-        
+
         original_vector = book.search_vector
         book.send(:update_search_vector)
         expect(book.search_vector).to eq(original_vector)
@@ -370,7 +404,7 @@ RSpec.describe Book, type: :model do
       it 'adds error when available_copies exceed total_copies' do
         book.available_copies = 10
         book.total_copies = 5
-        
+
         book.send(:available_copies_cannot_exceed_total_copies)
         expect(book.errors[:available_copies]).to include('cannot exceed total copies')
       end
@@ -378,7 +412,7 @@ RSpec.describe Book, type: :model do
       it 'does not add error when available_copies are valid' do
         book.available_copies = 3
         book.total_copies = 5
-        
+
         book.send(:available_copies_cannot_exceed_total_copies)
         expect(book.errors[:available_copies]).to be_empty
       end
@@ -386,7 +420,7 @@ RSpec.describe Book, type: :model do
       it 'handles nil values' do
         book.available_copies = nil
         book.total_copies = nil
-        
+
         expect { book.send(:available_copies_cannot_exceed_total_copies) }.not_to raise_error
       end
     end

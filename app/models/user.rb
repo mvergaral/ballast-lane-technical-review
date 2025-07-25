@@ -9,6 +9,7 @@ class User < ApplicationRecord
   # Associations
   has_many :borrowings, dependent: :destroy
   has_many :borrowed_books, through: :borrowings, source: :book
+  has_many :tasks, dependent: :destroy
   # Validations
   validates :role, presence: true
   validates :email, presence: true, uniqueness: true, format: { with: URI::MailTo::EMAIL_REGEXP }
@@ -17,16 +18,16 @@ class User < ApplicationRecord
   scope :members, -> { where(role: :member) }
   # Instance methods
   def librarian?
-    role == 'librarian'
+    role == "librarian"
   end
   def member?
-    role == 'member'
+    role == "member"
   end
   def active_borrowings
     borrowings.where(returned_at: nil)
   end
   def overdue_borrowings
-    active_borrowings.where('due_date < ?', Time.current)
+    active_borrowings.where("due_date < ?", Time.current)
   end
   def overdue_books_count
     overdue_borrowings.count
